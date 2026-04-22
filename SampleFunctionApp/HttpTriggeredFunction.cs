@@ -17,44 +17,43 @@ namespace SampleFunctionApp
         [Function("HttpTriggeredFunction")]
         public IActionResult Run([HttpTrigger(AuthorizationLevel.Anonymous, "get", "post")] HttpRequest req)
         {
-        _logger.LogInformation("C# HTTP trigger function processed a request.");
+            _logger.LogInformation("C# HTTP trigger function processed a request.");
 
-        // 1. Try to get name from query parameter
-        string name = req.Query["name"];
+            // 1. Try to get name from query parameter
+            string name = req.Query["name"];
 
-        // 2. If query param is empty, try reading from request body
-        if (string.IsNullOrWhiteSpace(name))
-        {
-            using var reader = new StreamReader(req.Body);
-            var requestBody = await reader.ReadToEndAsync();
-
-            if (!string.IsNullOrWhiteSpace(requestBody))
+            // 2. If query param is empty, try reading from request body
+            if (string.IsNullOrWhiteSpace(name))
             {
-                try
+                using var reader = new StreamReader(req.Body);
+                var requestBody = await reader.ReadToEndAsync();
+    
+                if (!string.IsNullOrWhiteSpace(requestBody))
                 {
-                    var json = JsonDocument.Parse(requestBody);
-                    if (json.RootElement.TryGetProperty("name", out var nameProperty))
+                    try
                     {
-                        name = nameProperty.GetString();
+                        var json = JsonDocument.Parse(requestBody);
+                        if (json.RootElement.TryGetProperty("name", out var nameProperty))
+                        {
+                            name = nameProperty.GetString();
+                        }
+                    }
+                    catch (JsonException)
+                    {
+                        // Invalid JSON – ignore and fall through
                     }
                 }
-                catch (JsonException)
-                {
-                    // Invalid JSON – ignore and fall through
-                }
             }
+
+            // 3. Final response
+            if (!string.IsNullOrWhiteSpace(name))
+            {
+                return new OkObjectResult($"Hi {name}!");
+            }
+
+            return new OkObjectResult(
+                "Welcome to Azure Functions! Please pass a name via query parameter or request body."
+            );
         }
-
-        // 3. Final response
-        if (!string.IsNullOrWhiteSpace(name))
-        {
-            return new OkObjectResult($"Hi {name}!");
-        }
-
-        return new OkObjectResult(
-            "Welcome to Azure Functions! Please pass a name via query parameter or request body."
-        );
-    }
-
     }
 }
