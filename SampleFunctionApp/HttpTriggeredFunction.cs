@@ -49,7 +49,7 @@ namespace SampleFunctionApp
             // 3. Final response
             if (!string.IsNullOrWhiteSpace(name))
             {
-                return new OkObjectResult($"Hi {name}!");
+                return new OkObjectResult($"Hi {name}! How are you doing?");
             }
 
             return new OkObjectResult(
